@@ -6,12 +6,23 @@
 <title>期末考査 語句暗記</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.23.3/babel.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #07070e; }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: #334; border-radius: 4px; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#07070e;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;color:#e8e8f0}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#334;border-radius:4px}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-65px) scale(1.4)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes flipIn{from{opacity:0;transform:rotateX(-12deg)}to{opacity:1;transform:rotateX(0)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(100,120,255,.3)}50%{box-shadow:0 0 0 10px rgba(100,120,255,0)}}
+.ch:hover{transform:translateY(-2px) scale(1.013);filter:brightness(1.1)}
+.ch{transition:transform .16s,filter .16s;cursor:pointer}
+.cb:hover{filter:brightness(1.12);transform:translateX(3px)}
+.cb{transition:all .12s;cursor:pointer}
+.fb:hover{filter:brightness(1.15)}
+.fb{transition:filter .14s;cursor:pointer}
+.grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(100,120,255,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(100,120,255,0.035) 1px,transparent 1px);background-size:40px 40px}
 </style>
 </head>
 <body>
@@ -19,139 +30,173 @@ body { background: #07070e; }
 <script type="text/babel">
 const { useState, useRef } = React;
 
-const UNITS = [
-  {
-    id: "meiji1", label: "明治維新①（基本方針・身分制度）", icon: "⛩️", color: "#c0392b",
-    cards: [
-      { no:507, word:"明治維新", desc:"幕末から明治時代初期、新政府による改革とそれにともなう社会の変革。王政復古の大号令で天皇中心の政治を実現した新政府は、五箇条の御誓文で方針を示し、富国強兵・殖産興業をスローガンにして近代化のための政策を進めた。", type:"concept" },
-      { no:508, word:"五箇条の御誓文", desc:"1868年、新政府が示した基本方針。世論の尊重・開国和親などを内容とし、天皇が神にちかう形で定められた。", type:"work" },
-      { no:509, word:"五榜の掲示", desc:"1868年、新政府が国民に対して出した立て札。五箇条の御誓文の翌日に出され、儒教道徳を守ること、一揆・キリスト教の禁止など旧幕府の政策を引き継いだものであった。", type:"concept" },
-      { no:510, word:"藩閥政治", desc:"薩摩（鹿児島県）・長州（山口県）・土佐（高知県）・肥前（佐賀県）の4つの藩の出身者が指導権をにぎった明治新政府の政治。", type:"concept" },
-      { no:511, word:"版籍奉還", desc:"1869年、大名に土地（図版）と人民（戸籍）を天皇に返上させたこと。旧藩主たちが知藩事となってそのまま藩政にあたったのであまり効果はなかった。", type:"event" },
-      { no:512, word:"廃藩置県", desc:"1871年、藩を廃止して新たに府・県を置いた政策。旧藩主を東京に移り住まわせ、中央から知事・県令を派遣して地方を治めさせた。これによって中央集権国家の基礎がつくられた。", type:"concept" },
-      { no:513, word:"四民平等", desc:"新政府がおこなった「士・農・工・商」の封建的身分制度を廃止したこと。皇族以外はみな平等として華族・士族・平民という新しい身分制をつくった。", type:"concept" },
-      { no:514, word:"平民", desc:"版籍奉還にともない、江戸時代までの「農・工・商」の身分の人々が与えられた身分。華族・士族の下に置かれ、1870年には名字（姓）の使用も認められた。", type:"concept" },
-      { no:515, word:"解放令", desc:"1871年、「えた」・「ひにん」などの差別されてきた身分を廃止したこと。", type:"concept" },
-    ]
-  },
-  {
-    id: "meiji2", label: "明治維新②（富国強兵・殖産興業）", icon: "🏭", color: "#8e44ad",
-    cards: [
-      { no:516, word:"富国強兵", desc:"明治新政府の近代化のためのスローガン。経済を発展させて国を豊かにし、軍備を強化するために兵制・税制などの改革が進められた。", type:"concept" },
-      { no:517, word:"学制", desc:"1872年、新政府が出した、近代学校制度に関する法令。6歳以上のすべての男女に小学校教育を受けさせることを定めた。しかし、制度が理解できず、また学校施設や授業料が人々の負担となったため、就学率は高くならなかった。", type:"work" },
-      { no:518, word:"徴兵令", desc:"明治新政府が国民に兵役の義務を課した法令。近代的軍隊の創設をめざした政府は、1873年にこの令を出し、士族・平民の区別なく満20歳以上の男子に3年間の兵役の義務を課した。", type:"concept" },
-      { no:519, word:"地租改正", desc:"1873年にはじまった明治新政府による土地制度・税制の改革。地価を定め、土地の所有者に地券を発行し、地価の3%を地租として、土地の所有者に現金で納めさせることとした。目的は政府の財政を安定させることであった。", type:"concept" },
-      { no:520, word:"殖産興業", desc:"明治政府が行なった近代産業育成のための政策。官営模範工場を中心に進められ、さらに産業発展に必要な交通・通信の整備、統一した貨幣制度の確立など、様々な部門での近代化が行なわれた。", type:"concept" },
-      { no:521, word:"官営模範工場", desc:"殖産興業政策により、近代産業育成のために建設された政府の直営工場。1872年につくられた群馬県の富岡製糸場などが有名。", type:"concept" },
-      { no:522, word:"富岡製糸場", desc:"1872年、群馬県につくられた官営模範工場。フランスから機械を輸入して技術者を招き、士族の子女を集めて開業。優良な生糸を生産した。のちに三井に払い下げられた。", type:"place" },
-      { no:523, word:"渋沢栄一", desc:"明治〜昭和時代の実業家。大蔵省につとめていたが、退官してから第一国立銀行をはじめ500以上の会社の設立に関係し、日本の資本主義の発展に大きく貢献した。", type:"person" },
-      { no:524, word:"開拓使", desc:"北海道の開拓を進めるために設置された官庁。屯田兵を中心に西洋技術を用いて開拓が進められ、さらにアメリカから外国人教師を招いて、札幌農学校を開き、農業の改良を進めた。", type:"concept" },
-      { no:525, word:"屯田兵", desc:"北海道の開拓と警備にあたった農兵。生活に困っていた旧東北諸藩の士族を移住させて、開拓使のもとで北海道の開拓を進めた。", type:"concept" },
-    ]
-  },
-  {
-    id: "meiji3", label: "明治維新③（文明開化・思想）", icon: "📚", color: "#2471a3",
-    cards: [
-      { no:526, word:"文明開化", desc:"明治時代初期、政府の近代化政策による社会の風潮。横浜や神戸などの開港地などでは洋風建築が増え、洋服・ガス灯・牛鍋・くつ・太陽暦など生活の洋風化が進められた。", type:"concept" },
-      { no:527, word:"福沢諭吉", desc:"明治時代の思想家・教育家。大分県（中津藩）出身。幕府の使節に従って欧米をめぐり、見聞を広めた。慶應義塾を開いて人材を育てるとともに「学問のすゝめ」などを著した。", type:"person" },
-      { no:528, word:"学問のすゝめ", desc:"福沢諭吉の代表的な著作。人間の平等と自立、学問の必要性を説いた。「天は人の上に人をつくらず、人の下に人をつくらず」の言葉は当時の人々に大きな影響を与えた。", type:"work" },
-      { no:529, word:"中江兆民", desc:"明治時代の思想家。フランスから帰国後、フランス流の民権思想を日本に紹介して藩閥政府を攻撃した。ルソーの「社会契約論」の一部を訳して出版し、自由民権運動にも影響を与えた。", type:"person" },
-    ]
-  },
-  {
-    id: "meiji4", label: "明治維新④（外交・自由民権）", icon: "🌏", color: "#117864",
-    cards: [
-      { no:530, word:"琉球処分", desc:"1879年、日本が琉球藩を廃止して沖縄県を設置したこと。", type:"event" },
-      { no:531, word:"日清修好条規", desc:"1871年、日本と清の間で結ばれた条約。これによって清と正式な国交が開かれ、領事裁判権をともに認めるなど、日本・清にとって外国と結んだ最初の対等条約であった。", type:"work" },
-      { no:532, word:"征韓論", desc:"武力によって朝鮮を開国させようとする主張。西郷隆盛・板垣退助らには、士族の不満を海外に向けさせる目的もあった。しかし、欧米から帰国した大久保利通らは国力の充実が先と反対した。", type:"concept" },
-      { no:533, word:"板垣退助", desc:"高知県（土佐藩）出身の政治家。新政府では参議となったが、征韓論で敗れて政府をさった。民撰議院設立の建白書を提出して自由民権運動を主導する中心人物として活躍し、1881年に自由党を結成した。", type:"person" },
-      { no:534, word:"明治六年の政変", desc:"1873年、征韓論を主張する西郷隆盛らが辞職して政府を去った事件。参議を辞職した西郷や板垣は政府を去り、西南戦争・自由民権運動の原因ともなった。", type:"event" },
-      { no:535, word:"江華島事件", desc:"1875年、日本の軍艦が朝鮮の砲台に侵入し砲撃を受けた事件。国交交渉に応じない朝鮮に対し、日本の軍艦が無断で測量して生存めがけ、武力衝突となった。この事件を利用して日本は翌年に日朝修好条規を結んだ。", type:"event" },
-      { no:536, word:"日朝修好条規", desc:"1876年、日本が朝鮮と結んだ条約。前年の江華島事件を利用して、武力を背景に条約を結び、朝鮮を開国させた。内容は日本は朝鮮が清の属国でないことを認め、領事裁判権を認めるなど朝鮮にとって不平等条約であった。", type:"work" },
-      { no:537, word:"樺太・千島交換条約", desc:"1875年、日本とロシアの国境を確定した条約。この条約により、樺太（サハリン）をロシア領とし、得撫島以北をふくめて千島列島全島を日本領と定めた。", type:"work" },
-    ]
-  },
+const SOCIAL = [
+  { id:"s1", label:"明治維新①（基本方針・身分）", icon:"⛩️", color:"#c0392b", cards:[
+    { no:507, word:"明治維新", desc:"幕末から明治初期、新政府による改革と社会変革。五箇条の御誓文で方針を示し、富国強兵・殖産興業をスローガンに近代化を進めた。", type:"concept" },
+    { no:508, word:"五箇条の御誓文", desc:"1868年、新政府が示した基本方針。世論の尊重・開国和親などを内容とし、天皇が神にちかう形で定められた。", type:"work" },
+    { no:509, word:"五榜の掲示", desc:"1868年、新政府が国民に出した立て札。儒教道徳を守ること、一揆・キリスト教の禁止など旧幕府の政策を引き継いだ。", type:"concept" },
+    { no:510, word:"藩閥政治", desc:"薩摩・長州・土佐・肥前の4藩の出身者が指導権をにぎった明治新政府の政治。", type:"concept" },
+    { no:511, word:"版籍奉還", desc:"1869年、大名に土地と人民を天皇に返上させたこと。旧藩主がそのまま藩政にあたったためあまり効果がなかった。", type:"event" },
+    { no:512, word:"廃藩置県", desc:"1871年、藩を廃止して府・県を置いた政策。中央から知事を派遣し、中央集権国家の基礎がつくられた。", type:"concept" },
+    { no:513, word:"四民平等", desc:"新政府が「士・農・工・商」の封建的身分制度を廃止したこと。皇族以外はみな平等として華族・士族・平民の新身分制をつくった。", type:"concept" },
+    { no:514, word:"平民", desc:"版籍奉還にともない、江戸時代までの「農・工・商」の身分の人々が与えられた身分。1870年には名字の使用も認められた。", type:"concept" },
+    { no:515, word:"解放令", desc:"1871年、「えた」・「ひにん」などの差別されてきた身分を廃止したこと。", type:"concept" },
+  ]},
+  { id:"s2", label:"明治維新②（富国強兵・殖産興業）", icon:"🏭", color:"#8e44ad", cards:[
+    { no:516, word:"富国強兵", desc:"明治新政府の近代化スローガン。経済を発展させて国を豊かにし、軍備を強化するために兵制・税制などの改革を進めた。", type:"concept" },
+    { no:517, word:"学制", desc:"1872年、新政府が出した近代学校制度に関する法令。6歳以上の全男女に小学校教育を受けさせることを定めた。", type:"work" },
+    { no:518, word:"徴兵令", desc:"明治新政府が国民に兵役の義務を課した法令。1873年に出され、満20歳以上の男子に3年間の兵役を課した。", type:"concept" },
+    { no:519, word:"地租改正", desc:"1873年から始まった土地制度・税制の改革。地価の3%を地租として現金で納めさせた。政府の財政安定が目的。", type:"concept" },
+    { no:520, word:"殖産興業", desc:"明治政府が行なった近代産業育成のための政策。官営模範工場を中心に産業発展に必要な交通・通信の整備なども行なった。", type:"concept" },
+    { no:521, word:"官営模範工場", desc:"殖産興業政策により近代産業育成のために建設された政府の直営工場。群馬県の富岡製糸場などが有名。", type:"concept" },
+    { no:522, word:"富岡製糸場", desc:"1872年、群馬県につくられた官営模範工場。フランスから機械・技術者を招き、士族の子女を集めて開業した。", type:"place" },
+    { no:523, word:"渋沢栄一", desc:"明治〜昭和時代の実業家。第一国立銀行をはじめ500以上の会社設立に関わり、日本の資本主義発展に大きく貢献した。", type:"person" },
+    { no:524, word:"開拓使", desc:"北海道の開拓を進めるために設置された官庁。屯田兵を中心に西洋技術を用いて開拓を進めた。", type:"concept" },
+    { no:525, word:"屯田兵", desc:"北海道の開拓と警備にあたった農兵。旧東北諸藩の士族を移住させて北海道の開拓を進めた。", type:"concept" },
+  ]},
+  { id:"s3", label:"明治維新③（文明開化・思想）", icon:"📚", color:"#2471a3", cards:[
+    { no:526, word:"文明開化", desc:"明治初期、政府の近代化政策による社会の風潮。洋風建築・洋服・ガス灯・牛鍋・太陽暦など生活の洋風化が進められた。", type:"concept" },
+    { no:527, word:"福沢諭吉", desc:"明治時代の思想家・教育家。慶應義塾を開き、「学問のすゝめ」などを著した。", type:"person" },
+    { no:528, word:"学問のすゝめ", desc:"福沢諭吉の代表的著作。「天は人の上に人をつくらず、人の下に人をつくらず」という言葉で、人間の平等と学問の必要性を説いた。", type:"work" },
+    { no:529, word:"中江兆民", desc:"明治時代の思想家。フランス流の民権思想を紹介して藩閥政府を攻撃し、自由民権運動に影響を与えた。", type:"person" },
+  ]},
+  { id:"s4", label:"明治維新④（外交・自由民権）", icon:"🌏", color:"#117864", cards:[
+    { no:530, word:"琉球処分", desc:"1879年、日本が琉球藩を廃止して沖縄県を設置したこと。", type:"event" },
+    { no:531, word:"日清修好条規", desc:"1871年、日本と清の間で結ばれた最初の対等条約。正式な国交が開かれた。", type:"work" },
+    { no:532, word:"征韓論", desc:"武力で朝鮮を開国させようとする主張。西郷隆盛・板垣退助らが主張したが、大久保利通らに反対され退けられた。", type:"concept" },
+    { no:533, word:"板垣退助", desc:"高知県出身の政治家。民撰議院設立の建白書を提出して自由民権運動を主導し、1881年に自由党を結成した。", type:"person" },
+    { no:534, word:"明治六年の政変", desc:"1873年、征韓論を主張する西郷隆盛らが辞職して政府を去った事件。西南戦争・自由民権運動の原因ともなった。", type:"event" },
+    { no:535, word:"江華島事件", desc:"1875年、日本の軍艦が朝鮮の砲台に侵入し砲撃を受けた事件。翌年の日朝修好条規締結のきっかけとなった。", type:"event" },
+    { no:536, word:"日朝修好条規", desc:"1876年、日本が朝鮮と結んだ不平等条約。武力を背景に朝鮮を開国させた。", type:"work" },
+    { no:537, word:"樺太・千島交換条約", desc:"1875年、日本とロシアの国境を確定した条約。樺太をロシア領、千島列島全島を日本領と定めた。", type:"work" },
+  ]},
+];
+
+const ENGLISH = [
+  { id:"e2", label:"Unit 2", icon:"🍜", color:"#e67e22", cards:[
+    { word:"especially", meaning:"特に、とりわけ" },
+    { word:"order", meaning:"〜を注文する" },
+    { word:"topping", meaning:"トッピング" },
+    { word:"various", meaning:"いろいろな" },
+    { word:"flavor", meaning:"味、風味" },
+    { word:"soy sauce", meaning:"しょうゆ" },
+    { word:"salt", meaning:"塩、食塩" },
+    { word:"and so on", meaning:"〜など" },
+    { word:"speech", meaning:"スピーチ、演説" },
+    { word:"sometime", meaning:"いつか、そのうち" },
+    { word:"if", meaning:"もし〜ならば" },
+    { word:"add", meaning:"〜を加える、足す" },
+    { word:"butter", meaning:"バター" },
+    { word:"would love to", meaning:"〜したい（のですが）" },
+    { word:"interested", meaning:"興味を持っている" },
+    { word:"forget", meaning:"（〜を）忘れる" },
+    { word:"kind", meaning:"種類" },
+    { word:"based", meaning:"〜をベースにした" },
+    { word:"because", meaning:"〜だから、〜なので" },
+    { word:"thick", meaning:"濃い、どろっとした" },
+    { word:"recommended", meaning:"おすすめの" },
+    { word:"manufacturer", meaning:"製造業者、メーカー" },
+    { word:"early", meaning:"早く" },
+    { word:"be interested in", meaning:"〜に興味がある" },
+    { word:"kind(s) of", meaning:"〜種類の" },
+    { word:"reflect", meaning:"（物事・考えなど）を反映する" },
+    { word:"climate", meaning:"気候" },
+    { word:"lives", meaning:"lifeの複数形" },
+    { word:"creativity", meaning:"創造性、独創性" },
+    { word:"chef", meaning:"シェフ、コック長" },
+    { word:"foreign", meaning:"外国の" },
+    { word:"variation", meaning:"変化、変種" },
+    { word:"Italy", meaning:"イタリア" },
+    { word:"create", meaning:"〜を創造する、つくり出す" },
+    { word:"sauce", meaning:"ソース" },
+    { word:"change", meaning:"変わる、変化する" },
+    { word:"come from", meaning:"〜出身である、〜から来ている" },
+    { word:"Here is", meaning:"これが〜です。〜をどうぞ。" },
+    { word:"name after", meaning:"…にちなんで〜と名付ける" },
+  ]},
 ];
 
 const shuffle = arr => {
   const a = [...arr];
   for (let i = a.length-1; i > 0; i--) {
     const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
+    [a[i],a[j]]=[a[j],a[i]];
   }
   return a;
 };
 
 function App() {
+  const [subj, setSubj] = useState(null);
   const [screen, setScreen] = useState("home");
-  const [subject, setSubject] = useState(null);
   const [unit, setUnit] = useState(null);
-  const [mode, setMode] = useState("flashcard");
+  const [mode, setMode] = useState("flash");
   const [deck, setDeck] = useState([]);
   const [idx, setIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [quizChoices, setQuizChoices] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [score, setScore] = useState({ ok:0, ng:0 });
-  const [particles, setParticles] = useState([]);
-  const timerRef = useRef(null);
+  const [choices, setChoices] = useState([]);
+  const [sel, setSel] = useState(null);
+  const [score, setScore] = useState({ok:0,ng:0});
+  const [input, setInput] = useState("");
+  const [spelOk, setSpelOk] = useState(null);
+  const [showAns, setShowAns] = useState(false);
+  const [ptcls, setPtcls] = useState([]);
+  const tmr = useRef(null);
 
-  const spawnParticles = ok => {
-    setParticles(Array.from({length:8},(_,i)=>({
-      id:Date.now()+i, x:20+Math.random()*60, y:30+Math.random()*40,
-      emoji:ok?["⭐","✨","🎉","💫"][i%4]:["💨","😅"][i%2]
-    })));
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(()=>setParticles([]),1100);
+  const units = subj==="en" ? ENGLISH : SOCIAL;
+
+  const boom = ok => {
+    setPtcls(Array.from({length:8},(_,i)=>({id:Date.now()+i,x:20+Math.random()*60,y:30+Math.random()*40,e:ok?"⭐✨🎉💫".split("")[i%4]:"💨😅".split("💨")[i%2]||"💨"})));
+    clearTimeout(tmr.current);
+    tmr.current=setTimeout(()=>setPtcls([]),1100);
   };
 
-  const buildChoices = (cards, currentIdx) => {
-    const correct = cards[currentIdx];
-    const pool = UNITS.flatMap(u=>u.cards);
-    const same = shuffle(pool.filter(c=>c.word!==correct.word && c.type===correct.type));
-    const other = shuffle(pool.filter(c=>c.word!==correct.word && c.type!==correct.type));
-    return shuffle([correct, ...[...same,...other].slice(0,3)]);
+  const mkChoices = (cards,ci) => {
+    const cor = cards[ci];
+    const pool = SOCIAL.flatMap(u=>u.cards);
+    const same = shuffle(pool.filter(c=>c.word!==cor.word&&c.type===cor.type));
+    const other = shuffle(pool.filter(c=>c.word!==cor.word&&c.type!==cor.type));
+    return shuffle([cor,...[...same,...other].slice(0,3)]);
   };
 
-  const startStudy = (u, m) => {
-    const shuffled = shuffle(u.cards);
-    setUnit(u); setMode(m); setDeck(shuffled); setIdx(0);
-    setFlipped(false); setSelected(null); setScore({ok:0,ng:0});
-    if (m==="quiz") setQuizChoices(buildChoices(shuffled, 0));
+  const start = (u,m) => {
+    const d = shuffle(u.cards);
+    setUnit(u); setMode(m); setDeck(d); setIdx(0);
+    setFlipped(false); setSel(null); setScore({ok:0,ng:0});
+    setInput(""); setSpelOk(null); setShowAns(false);
+    if(m==="quiz") setChoices(mkChoices(d,0));
     setScreen("study");
   };
 
-  const goNext = () => {
-    const next = idx+1;
-    if (next>=deck.length) { setScreen("result"); return; }
-    setIdx(next); setFlipped(false); setSelected(null);
-    if (mode==="quiz") setQuizChoices(buildChoices(deck, next));
+  const next = () => {
+    const n=idx+1;
+    if(n>=deck.length){setScreen("result");return;}
+    setIdx(n); setFlipped(false); setSel(null);
+    setInput(""); setSpelOk(null); setShowAns(false);
+    if(mode==="quiz") setChoices(mkChoices(deck,n));
   };
 
-  const handleChoice = ch => {
-    if (selected!==null) return;
-    setSelected(ch);
-    const ok = ch.word===deck[idx].word;
+  const pick = c => {
+    if(sel!==null)return;
+    setSel(c);
+    const ok=c.word===deck[idx].word;
     setScore(s=>({ok:s.ok+(ok?1:0),ng:s.ng+(ok?0:1)}));
-    spawnParticles(ok);
+    boom(ok);
   };
 
-  const unitColor = unit?.color ?? "#6478ff";
+  const check = () => {
+    const ok=input.trim().toLowerCase()===deck[idx].word.toLowerCase();
+    setSpelOk(ok);
+    setScore(s=>({ok:s.ok+(ok?1:0),ng:s.ng+(ok?0:1)}));
+    boom(ok);
+  };
+
+  const uc = unit?.color||"#6478ff";
   const total = deck.length;
 
   return (
-    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#08080f,#0e101e 60%,#060c14)",fontFamily:"'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif",color:"#e8e8f0",position:"relative",overflow:"hidden"}}>
-      <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(rgba(100,120,255,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(100,120,255,0.035) 1px,transparent 1px)",backgroundSize:"40px 40px"}}/>
-      {particles.map(p=><div key={p.id} style={{position:"fixed",left:`${p.x}%`,top:`${p.y}%`,fontSize:"1.8rem",pointerEvents:"none",zIndex:999,animation:"floatUp 1.1s ease-out forwards"}}>{p.emoji}</div>)}
-      <style>{`
-        @keyframes floatUp{0%{opacity:1;transform:translateY(0)scale(1)}100%{opacity:0;transform:translateY(-65px)scale(1.4)}}
-        @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes flipIn{from{opacity:0;transform:rotateX(-12deg)}to{opacity:1;transform:rotateX(0)}}
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(100,120,255,.3)}50%{box-shadow:0 0 0 10px rgba(100,120,255,0)}}
-        .ch:hover{transform:translateY(-2px)scale(1.013);filter:brightness(1.1)}.ch{transition:transform .16s,filter .16s;cursor:pointer}
-        .cb:hover{filter:brightness(1.12);transform:translateX(3px)}.cb{transition:all .12s;cursor:pointer}
-        .fb:hover{filter:brightness(1.15)}.fb{transition:filter .14s;cursor:pointer}
-      `}</style>
+    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#08080f,#0e101e 60%,#060c14)",position:"relative",overflow:"hidden"}}>
+      <div className="grid"/>
+      {ptcls.map(p=><div key={p.id} style={{position:"fixed",left:`${p.x}%`,top:`${p.y}%`,fontSize:"1.8rem",pointerEvents:"none",zIndex:999,animation:"floatUp 1.1s ease-out forwards"}}>{p.e}</div>)}
 
       <div style={{maxWidth:640,margin:"0 auto",padding:"16px 14px"}}>
 
@@ -159,168 +204,178 @@ function App() {
         <div style={{textAlign:"center",marginBottom:18,animation:"fadeIn 0.5s ease"}}>
           <div style={{fontSize:"0.68rem",letterSpacing:"0.24em",color:"#6478ff",textTransform:"uppercase",marginBottom:4}}>STUDY FLASH CARDS</div>
           <h1 style={{fontSize:"1.55rem",fontWeight:900,margin:0,background:"linear-gradient(90deg,#8fa8ff,#c8a8ff,#8fc8ff)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>期末考査 語句暗記</h1>
-          <div style={{fontSize:"0.74rem",color:"#556",marginTop:4}}>歴史（明治維新）· No.507〜537 · 全31語句</div>
-          {screen==="study" && (
-            <div style={{marginTop:8,display:"flex",justifyContent:"center",gap:8,flexWrap:"wrap"}}>
-              <span style={{background:"rgba(100,120,255,.15)",border:"1px solid rgba(100,120,255,.3)",borderRadius:20,padding:"2px 12px",fontSize:"0.76rem"}}>{idx+1}/{total}</span>
-              <span style={{background:"rgba(39,174,96,.15)",border:"1px solid #27ae6055",borderRadius:20,padding:"2px 12px",fontSize:"0.76rem",color:"#7ef0a8"}}>✅{score.ok}</span>
-              <span style={{background:"rgba(192,57,43,.15)",border:"1px solid #c0392b55",borderRadius:20,padding:"2px 12px",fontSize:"0.76rem",color:"#f08080"}}>❌{score.ng}</span>
-            </div>
-          )}
+          {screen==="study"&&<div style={{marginTop:8,display:"flex",justifyContent:"center",gap:8,flexWrap:"wrap"}}>
+            <span style={{background:"rgba(100,120,255,.15)",border:"1px solid rgba(100,120,255,.3)",borderRadius:20,padding:"2px 12px",fontSize:"0.76rem"}}>{idx+1}/{total}</span>
+            <span style={{background:"rgba(39,174,96,.15)",border:"1px solid #27ae6055",borderRadius:20,padding:"2px 12px",fontSize:"0.76rem",color:"#7ef0a8"}}>✅{score.ok}</span>
+            <span style={{background:"rgba(192,57,43,.15)",border:"1px solid #c0392b55",borderRadius:20,padding:"2px 12px",fontSize:"0.76rem",color:"#f08080"}}>❌{score.ng}</span>
+          </div>}
         </div>
 
-        {/* HOME: 単元選択 */}
-        {screen==="home" && (
-          <div style={{animation:"fadeIn 0.45s ease"}}>
-            <p style={{textAlign:"center",color:"#778",fontSize:"0.85rem",marginBottom:20}}>単元を選んでスタート！</p>
-            <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {UNITS.map(u=>(
-                <div key={u.id} style={{background:"linear-gradient(135deg,rgba(16,16,32,.95),rgba(22,22,44,.9))",border:`1px solid ${u.color}44`,borderLeft:`4px solid ${u.color}`,borderRadius:13,padding:"13px 16px"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                    <span style={{fontSize:"1.4rem"}}>{u.icon}</span>
-                    <div>
-                      <div style={{fontWeight:700,fontSize:"0.95rem"}}>{u.label}</div>
-                      <div style={{fontSize:"0.7rem",color:"#556",marginTop:1}}>全{u.cards.length}語句</div>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",gap:8}}>
-                    <button className="fb" onClick={()=>startStudy(u,"flashcard")} style={{flex:1,padding:"8px 0",borderRadius:9,background:`${u.color}22`,border:`1px solid ${u.color}44`,color:"#ccd",fontSize:"0.8rem",fontWeight:600}}>📖 フラッシュカード</button>
-                    <button className="fb" onClick={()=>startStudy(u,"quiz")} style={{flex:1,padding:"8px 0",borderRadius:9,background:`${u.color}33`,border:`1px solid ${u.color}66`,color:"#dde",fontSize:"0.8rem",fontWeight:600}}>🧠 クイズ</button>
-                  </div>
+        {/* HOME */}
+        {screen==="home"&&<div style={{animation:"fadeIn 0.45s ease"}}>
+          <p style={{textAlign:"center",color:"#778",fontSize:"0.85rem",marginBottom:20}}>教科を選んでください</p>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {[{k:"so",icon:"🌐",label:"社会（歴史）",sub:"明治維新 · 4単元 · 31語句",color:"#c0392b"},{k:"en",icon:"🇬🇧",label:"英語 Unit 2",sub:"スペル入力 · 39語句",color:"#e67e22"}].map(s=>(
+              <div key={s.k} className="ch" onClick={()=>{setSubj(s.k);setScreen("units");}}
+                style={{background:"linear-gradient(135deg,rgba(16,16,32,.95),rgba(22,22,44,.9))",border:`1px solid ${s.color}44`,borderLeft:`4px solid ${s.color}`,borderRadius:14,padding:"20px",display:"flex",alignItems:"center",gap:16}}>
+                <span style={{fontSize:"2.2rem"}}>{s.icon}</span>
+                <div>
+                  <div style={{fontWeight:800,fontSize:"1.1rem"}}>{s.label}</div>
+                  <div style={{fontSize:"0.74rem",color:"#778",marginTop:3}}>{s.sub}</div>
                 </div>
-              ))}
-              {/* 全単元ミックス */}
-              <div style={{background:"linear-gradient(135deg,rgba(100,120,255,.12),rgba(100,120,255,.04))",border:"1px solid rgba(100,120,255,.3)",borderLeft:"4px solid #6478ff",borderRadius:13,padding:"13px 16px"}}>
+                <div style={{marginLeft:"auto",color:s.color,fontSize:"1.3rem"}}>▶</div>
+              </div>
+            ))}
+          </div>
+        </div>}
+
+        {/* UNITS */}
+        {screen==="units"&&<div style={{animation:"fadeIn 0.4s ease"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+            <button className="fb" onClick={()=>setScreen("home")} style={{background:"rgba(100,120,255,.1)",border:"1px solid #334",borderRadius:8,color:"#778",padding:"4px 11px",fontSize:"0.74rem"}}>← 教科選択</button>
+            <span style={{fontWeight:700,color:subj==="en"?"#e67e22":"#c0392b",fontSize:"0.9rem"}}>{subj==="en"?"🇬🇧 英語 Unit 2":"🌐 社会（歴史）"}</span>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:9}}>
+            {units.map(u=>(
+              <div key={u.id} style={{background:"linear-gradient(135deg,rgba(16,16,32,.95),rgba(22,22,44,.9))",border:`1px solid ${u.color}44`,borderLeft:`4px solid ${u.color}`,borderRadius:13,padding:"13px 16px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                  <span style={{fontSize:"1.4rem"}}>🎯</span>
+                  <span style={{fontSize:"1.4rem"}}>{u.icon}</span>
                   <div>
-                    <div style={{fontWeight:700,fontSize:"0.95rem"}}>全単元ミックス</div>
-                    <div style={{fontSize:"0.7rem",color:"#778",marginTop:1}}>全31語句 シャッフル出題</div>
+                    <div style={{fontWeight:700,fontSize:"0.95rem"}}>{u.label}</div>
+                    <div style={{fontSize:"0.7rem",color:"#556",marginTop:1}}>全{u.cards.length}語句</div>
                   </div>
                 </div>
                 <div style={{display:"flex",gap:8}}>
-                  <button className="fb" onClick={()=>startStudy({id:"all",label:"全単元",icon:"🎯",color:"#6478ff",cards:shuffle(UNITS.flatMap(u=>u.cards))},"flashcard")} style={{flex:1,padding:"8px 0",borderRadius:9,background:"rgba(100,120,255,.15)",border:"1px solid rgba(100,120,255,.3)",color:"#ccd",fontSize:"0.8rem",fontWeight:600}}>📖 フラッシュカード</button>
-                  <button className="fb" onClick={()=>startStudy({id:"all",label:"全単元",icon:"🎯",color:"#6478ff",cards:shuffle(UNITS.flatMap(u=>u.cards))},"quiz")} style={{flex:1,padding:"8px 0",borderRadius:9,background:"rgba(100,120,255,.2)",border:"1px solid rgba(100,120,255,.4)",color:"#dde",fontSize:"0.8rem",fontWeight:600}}>🧠 クイズ</button>
+                  {subj==="en"
+                    ? <button className="fb" onClick={()=>start(u,"spell")} style={{flex:1,padding:"8px 0",borderRadius:9,background:`${u.color}33`,border:`1px solid ${u.color}66`,color:"#dde",fontSize:"0.8rem",fontWeight:600}}>✏️ スペル入力</button>
+                    : <><button className="fb" onClick={()=>start(u,"flash")} style={{flex:1,padding:"8px 0",borderRadius:9,background:`${u.color}22`,border:`1px solid ${u.color}44`,color:"#ccd",fontSize:"0.8rem",fontWeight:600}}>📖 フラッシュカード</button>
+                       <button className="fb" onClick={()=>start(u,"quiz")} style={{flex:1,padding:"8px 0",borderRadius:9,background:`${u.color}33`,border:`1px solid ${u.color}66`,color:"#dde",fontSize:"0.8rem",fontWeight:600}}>🧠 クイズ</button></>
+                  }
                 </div>
               </div>
-            </div>
-            <div style={{marginTop:16,background:"rgba(100,120,255,.07)",border:"1px solid rgba(100,120,255,.15)",borderRadius:12,padding:"10px 14px",fontSize:"0.78rem",color:"#8899bb",lineHeight:1.75}}>
-              📖 <b style={{color:"#aab"}}>フラッシュカード</b> — 語句を見て説明を確認　|　🧠 <b style={{color:"#aab"}}>クイズ</b> — 説明を読んで語句を4択で答える
+            ))}
+            <div style={{background:"linear-gradient(135deg,rgba(100,120,255,.12),rgba(100,120,255,.04))",border:"1px solid rgba(100,120,255,.3)",borderLeft:"4px solid #6478ff",borderRadius:13,padding:"13px 16px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                <span style={{fontSize:"1.4rem"}}>🎯</span>
+                <div style={{fontWeight:700,fontSize:"0.95rem"}}>全単元ミックス</div>
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                {subj==="en"
+                  ? <button className="fb" onClick={()=>start({id:"all",label:"全単元",icon:"🎯",color:"#6478ff",cards:shuffle(units.flatMap(u=>u.cards))},"spell")} style={{flex:1,padding:"8px 0",borderRadius:9,background:"rgba(100,120,255,.2)",border:"1px solid rgba(100,120,255,.4)",color:"#dde",fontSize:"0.8rem",fontWeight:600}}>✏️ スペル入力</button>
+                  : <><button className="fb" onClick={()=>start({id:"all",label:"全単元",icon:"🎯",color:"#6478ff",cards:shuffle(units.flatMap(u=>u.cards))},"flash")} style={{flex:1,padding:"8px 0",borderRadius:9,background:"rgba(100,120,255,.15)",border:"1px solid rgba(100,120,255,.3)",color:"#ccd",fontSize:"0.8rem",fontWeight:600}}>📖 フラッシュカード</button>
+                     <button className="fb" onClick={()=>start({id:"all",label:"全単元",icon:"🎯",color:"#6478ff",cards:shuffle(units.flatMap(u=>u.cards))},"quiz")} style={{flex:1,padding:"8px 0",borderRadius:9,background:"rgba(100,120,255,.2)",border:"1px solid rgba(100,120,255,.4)",color:"#dde",fontSize:"0.8rem",fontWeight:600}}>🧠 クイズ</button></>
+                }
+              </div>
             </div>
           </div>
-        )}
+        </div>}
 
         {/* STUDY */}
-        {screen==="study" && idx<deck.length && (
-          <div style={{animation:"fadeIn 0.35s ease"}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-              <span style={{fontSize:"0.95rem"}}>{unit.icon}</span>
-              <span style={{fontSize:"0.77rem",color:unitColor,fontWeight:600}}>{unit.label}</span>
-              <span style={{fontSize:"0.72rem",color:"#556",marginLeft:4}}>{mode==="flashcard"?"📖 カード":"🧠 クイズ"}</span>
-              <button className="fb" onClick={()=>setScreen("home")} style={{marginLeft:"auto",background:"rgba(100,120,255,.1)",border:"1px solid #334",borderRadius:8,color:"#778",padding:"4px 10px",fontSize:"0.73rem"}}>← 単元選択</button>
-            </div>
-            <div style={{height:4,background:"#1a1a35",borderRadius:4,marginBottom:14,overflow:"hidden"}}>
-              <div style={{height:"100%",width:`${(idx/total)*100}%`,background:`linear-gradient(90deg,${unitColor},${unitColor}88)`,transition:"width 0.4s",borderRadius:4}}/>
-            </div>
-            <div style={{fontSize:"0.7rem",color:"#445",marginBottom:6,textAlign:"right"}}>No.{deck[idx].no}</div>
-
-            {/* フラッシュカード */}
-            {mode==="flashcard" && (
-              <div>
-                <div style={{background:`linear-gradient(135deg,${unitColor}18,${unitColor}08)`,border:`1px solid ${unitColor}44`,borderRadius:18,padding:"28px 22px",textAlign:"center",marginBottom:14,minHeight:110,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <div style={{fontSize:"1.9rem",fontWeight:900,letterSpacing:"0.04em",color:"#f0f0ff"}}>{deck[idx].word}</div>
-                </div>
-                {!flipped ? (
-                  <button className="fb" onClick={()=>setFlipped(true)} style={{width:"100%",padding:"14px",borderRadius:14,background:"rgba(100,120,255,.1)",border:"2px dashed rgba(100,120,255,.3)",color:"#8899cc",fontWeight:600,fontSize:"0.9rem",marginBottom:14}}>
-                    タップして説明を見る 👁️
-                  </button>
-                ) : (
-                  <div style={{background:"rgba(14,16,30,.95)",border:`1px solid ${unitColor}33`,borderRadius:14,padding:"18px",marginBottom:14,animation:"flipIn 0.3s ease"}}>
-                    <p style={{margin:0,fontSize:"0.87rem",lineHeight:1.82,color:"#c8cce0"}}>{deck[idx].desc}</p>
-                  </div>
-                )}
-                {flipped && (
-                  <div style={{display:"flex",gap:10}}>
-                    <button className="fb" onClick={()=>{setScore(s=>({...s,ng:s.ng+1}));spawnParticles(false);goNext();}} style={{flex:1,padding:"13px",borderRadius:12,background:"rgba(192,57,43,.18)",border:"1px solid #c0392b66",color:"#f08080",fontWeight:700,fontSize:"0.9rem"}}>😅 あやふや</button>
-                    <button className="fb" onClick={()=>{setScore(s=>({...s,ok:s.ok+1}));spawnParticles(true);goNext();}} style={{flex:1,padding:"13px",borderRadius:12,background:"rgba(39,174,96,.18)",border:"1px solid #27ae6066",color:"#7ef0a8",fontWeight:700,fontSize:"0.9rem"}}>✅ 覚えた！</button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* クイズ */}
-            {mode==="quiz" && (
-              <div>
-                <div style={{background:"linear-gradient(135deg,rgba(18,20,44,.97),rgba(22,25,52,.9))",border:`1px solid ${unitColor}33`,borderRadius:16,padding:"20px 18px",marginBottom:14}}>
-                  <div style={{fontSize:"0.68rem",color:"#445",marginBottom:6}}>次の説明にあてはまる語句はどれ？</div>
-                  <p style={{margin:0,fontSize:"0.9rem",lineHeight:1.8,color:"#c8cce0"}}>{deck[idx].desc}</p>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
-                  {quizChoices.map((c,i)=>{
-                    const answered=selected!==null, isRight=c.word===deck[idx].word, isSel=selected?.word===c.word;
-                    let bg="rgba(18,20,44,.85)",border="1px solid #252545",color="#ccd";
-                    if(answered){
-                      if(isRight){bg="rgba(39,174,96,.18)";border="1px solid #27ae6077";color="#7ef0a8";}
-                      else if(isSel){bg="rgba(192,57,43,.18)";border="1px solid #c0392b77";color="#f08080";}
-                    }
-                    return (
-                      <div key={i} className={answered?"":"cb"} onClick={()=>handleChoice(c)}
-                        style={{background:bg,border,borderRadius:11,padding:"12px 14px",color,display:"flex",alignItems:"center",gap:10,fontSize:"0.92rem",opacity:answered&&!isRight&&!isSel?.38:1}}>
-                        <span style={{width:26,height:26,borderRadius:7,flexShrink:0,background:answered?(isRight?"#27ae60":isSel?"#c0392b":"#1a1a35"):"#1a1a35",border:answered?"none":"1px solid #334",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.76rem",fontWeight:700,color:answered?"#fff":"#556"}}>
-                          {answered?(isRight?"○":isSel?"✕":""):["A","B","C","D"][i]}
-                        </span>
-                        {c.word}
-                      </div>
-                    );
-                  })}
-                </div>
-                {selected!==null && (
-                  <div>
-                    <div style={{background:selected.word===deck[idx].word?"rgba(39,174,96,.11)":"rgba(192,57,43,.11)",border:`1px solid ${selected.word===deck[idx].word?"#27ae60":"#c0392b"}55`,borderRadius:12,padding:"12px 15px",marginBottom:11,animation:"fadeIn 0.25s ease"}}>
-                      <div style={{fontWeight:700,fontSize:"1.01rem",marginBottom:5,color:selected.word===deck[idx].word?"#7ef0a8":"#f08080"}}>
-                        {selected.word===deck[idx].word?"🎉 正解！":`😅 不正解… 正解は「${deck[idx].word}」`}
-                      </div>
-                      <p style={{margin:0,fontSize:"0.81rem",color:"#aab",lineHeight:1.72}}>{deck[idx].desc}</p>
-                    </div>
-                    <button className="fb" onClick={goNext} style={{width:"100%",padding:"13px",borderRadius:12,background:`linear-gradient(135deg,${unitColor},${unitColor}bb)`,border:"none",color:"#fff",fontWeight:700,fontSize:"0.95rem",animation:"pulse 2s infinite"}}>
-                      {idx+1>=total?"結果を見る 🏆":"次へ →"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+        {screen==="study"&&idx<deck.length&&<div style={{animation:"fadeIn 0.35s ease"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+            <span style={{fontSize:"0.95rem"}}>{unit.icon}</span>
+            <span style={{fontSize:"0.77rem",color:uc,fontWeight:600}}>{unit.label}</span>
+            <button className="fb" onClick={()=>setScreen("units")} style={{marginLeft:"auto",background:"rgba(100,120,255,.1)",border:"1px solid #334",borderRadius:8,color:"#778",padding:"4px 10px",fontSize:"0.73rem"}}>← 単元選択</button>
           </div>
-        )}
+          <div style={{height:4,background:"#1a1a35",borderRadius:4,marginBottom:14,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${(idx/total)*100}%`,background:`linear-gradient(90deg,${uc},${uc}88)`,transition:"width 0.4s",borderRadius:4}}/>
+          </div>
+          {deck[idx].no&&<div style={{fontSize:"0.7rem",color:"#445",marginBottom:6,textAlign:"right"}}>No.{deck[idx].no}</div>}
+
+          {/* フラッシュカード */}
+          {mode==="flash"&&<div>
+            <div style={{background:`linear-gradient(135deg,${uc}18,${uc}08)`,border:`1px solid ${uc}44`,borderRadius:18,padding:"28px 22px",textAlign:"center",marginBottom:14,minHeight:110,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <div style={{fontSize:"1.9rem",fontWeight:900,color:"#f0f0ff"}}>{deck[idx].word}</div>
+            </div>
+            {!flipped
+              ? <button className="fb" onClick={()=>setFlipped(true)} style={{width:"100%",padding:"14px",borderRadius:14,background:"rgba(100,120,255,.1)",border:"2px dashed rgba(100,120,255,.3)",color:"#8899cc",fontWeight:600,fontSize:"0.9rem",marginBottom:14}}>タップして説明を見る 👁️</button>
+              : <div style={{background:"rgba(14,16,30,.95)",border:`1px solid ${uc}33`,borderRadius:14,padding:"18px",marginBottom:14,animation:"flipIn 0.3s ease"}}><p style={{margin:0,fontSize:"0.87rem",lineHeight:1.82,color:"#c8cce0"}}>{deck[idx].desc}</p></div>
+            }
+            {flipped&&<div style={{display:"flex",gap:10}}>
+              <button className="fb" onClick={()=>{setScore(s=>({...s,ng:s.ng+1}));boom(false);next();}} style={{flex:1,padding:"13px",borderRadius:12,background:"rgba(192,57,43,.18)",border:"1px solid #c0392b66",color:"#f08080",fontWeight:700,fontSize:"0.9rem"}}>😅 あやふや</button>
+              <button className="fb" onClick={()=>{setScore(s=>({...s,ok:s.ok+1}));boom(true);next();}} style={{flex:1,padding:"13px",borderRadius:12,background:"rgba(39,174,96,.18)",border:"1px solid #27ae6066",color:"#7ef0a8",fontWeight:700,fontSize:"0.9rem"}}>✅ 覚えた！</button>
+            </div>}
+          </div>}
+
+          {/* クイズ */}
+          {mode==="quiz"&&<div>
+            <div style={{background:"linear-gradient(135deg,rgba(18,20,44,.97),rgba(22,25,52,.9))",border:`1px solid ${uc}33`,borderRadius:16,padding:"20px 18px",marginBottom:14}}>
+              <div style={{fontSize:"0.68rem",color:"#445",marginBottom:6}}>次の説明にあてはまる語句はどれ？</div>
+              <p style={{margin:0,fontSize:"0.9rem",lineHeight:1.8,color:"#c8cce0"}}>{deck[idx].desc}</p>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+              {choices.map((c,i)=>{
+                const ans=sel!==null, right=c.word===deck[idx].word, picked=sel?.word===c.word;
+                let bg="rgba(18,20,44,.85)",bd="1px solid #252545",cl="#ccd";
+                if(ans){if(right){bg="rgba(39,174,96,.18)";bd="1px solid #27ae6077";cl="#7ef0a8";}else if(picked){bg="rgba(192,57,43,.18)";bd="1px solid #c0392b77";cl="#f08080";}}
+                return <div key={i} className={ans?"":"cb"} onClick={()=>pick(c)}
+                  style={{background:bg,border:bd,borderRadius:11,padding:"12px 14px",color:cl,display:"flex",alignItems:"center",gap:10,fontSize:"0.92rem",opacity:ans&&!right&&!picked?0.38:1}}>
+                  <span style={{width:26,height:26,borderRadius:7,flexShrink:0,background:ans?(right?"#27ae60":picked?"#c0392b":"#1a1a35"):"#1a1a35",border:ans?"none":"1px solid #334",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.76rem",fontWeight:700,color:ans?"#fff":"#556"}}>
+                    {ans?(right?"○":picked?"✕":""):["A","B","C","D"][i]}
+                  </span>
+                  {c.word}
+                </div>;
+              })}
+            </div>
+            {sel!==null&&<div>
+              <div style={{background:sel.word===deck[idx].word?"rgba(39,174,96,.11)":"rgba(192,57,43,.11)",border:`1px solid ${sel.word===deck[idx].word?"#27ae60":"#c0392b"}55`,borderRadius:12,padding:"12px 15px",marginBottom:11,animation:"fadeIn 0.25s ease"}}>
+                <div style={{fontWeight:700,fontSize:"1.01rem",marginBottom:5,color:sel.word===deck[idx].word?"#7ef0a8":"#f08080"}}>
+                  {sel.word===deck[idx].word?"🎉 正解！":`😅 不正解… 正解は「${deck[idx].word}」`}
+                </div>
+                <p style={{margin:0,fontSize:"0.81rem",color:"#aab",lineHeight:1.72}}>{deck[idx].desc}</p>
+              </div>
+              <button className="fb" onClick={next} style={{width:"100%",padding:"13px",borderRadius:12,background:`linear-gradient(135deg,${uc},${uc}bb)`,border:"none",color:"#fff",fontWeight:700,fontSize:"0.95rem",animation:"pulse 2s infinite"}}>
+                {idx+1>=total?"結果を見る 🏆":"次へ →"}
+              </button>
+            </div>}
+          </div>}
+
+          {/* スペル入力 */}
+          {mode==="spell"&&<div>
+            <div style={{background:`linear-gradient(135deg,${uc}18,${uc}08)`,border:`1px solid ${uc}44`,borderRadius:18,padding:"24px 22px",textAlign:"center",marginBottom:16,minHeight:90,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}>
+              <div style={{fontSize:"0.72rem",color:"#556"}}>次の意味の英単語は？</div>
+              <div style={{fontSize:"1.5rem",fontWeight:900,color:"#f0f0ff"}}>{deck[idx].meaning}</div>
+            </div>
+            <input type="text" value={input} onChange={e=>setInput(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter"&&spelOk===null&&input.trim()!=="")check();}}
+              disabled={spelOk!==null} placeholder="英単語を入力してEnter..."
+              style={{width:"100%",padding:"14px 16px",borderRadius:12,background:"rgba(20,22,48,.9)",border:`2px solid ${spelOk===null?"rgba(100,120,255,.3)":spelOk?"#27ae60":"#c0392b"}`,color:"#e8e8f0",fontSize:"1.1rem",outline:"none",marginBottom:12,textAlign:"center"}}
+            />
+            {spelOk===null&&input.trim()!==""&&<button className="fb" onClick={check} style={{width:"100%",padding:"12px",borderRadius:12,background:`linear-gradient(135deg,${uc},${uc}bb)`,border:"none",color:"#fff",fontWeight:700,fontSize:"0.95rem",marginBottom:12}}>確認する ✅</button>}
+            {spelOk===null&&!showAns&&<button className="fb" onClick={()=>setShowAns(true)} style={{width:"100%",padding:"10px",borderRadius:12,background:"rgba(100,120,255,.08)",border:"1px dashed rgba(100,120,255,.25)",color:"#667",fontSize:"0.8rem"}}>答えを見る 👁️</button>}
+            {showAns&&spelOk===null&&<div style={{textAlign:"center",padding:"10px",background:"rgba(100,120,255,.1)",border:"1px solid rgba(100,120,255,.2)",borderRadius:12,marginBottom:12}}><span style={{fontSize:"1.3rem",fontWeight:900,color:"#8fa8ff"}}>{deck[idx].word}</span></div>}
+            {spelOk!==null&&<div>
+              <div style={{background:spelOk?"rgba(39,174,96,.12)":"rgba(192,57,43,.12)",border:`1px solid ${spelOk?"#27ae60":"#c0392b"}55`,borderRadius:12,padding:"14px 16px",marginBottom:12,animation:"fadeIn 0.25s ease"}}>
+                <div style={{fontWeight:700,fontSize:"1.05rem",marginBottom:6,color:spelOk?"#7ef0a8":"#f08080"}}>{spelOk?"🎉 正解！":"😅 不正解…"}</div>
+                <div style={{fontSize:"0.9rem",color:"#aab"}}>正解: <span style={{fontSize:"1.1rem",fontWeight:900,color:"#8fa8ff"}}>{deck[idx].word}</span></div>
+              </div>
+              <button className="fb" onClick={next} style={{width:"100%",padding:"13px",borderRadius:12,background:`linear-gradient(135deg,${uc},${uc}bb)`,border:"none",color:"#fff",fontWeight:700,fontSize:"0.95rem",animation:"pulse 2s infinite"}}>
+                {idx+1>=total?"結果を見る 🏆":"次へ →"}
+              </button>
+            </div>}
+          </div>}
+        </div>}
 
         {/* RESULT */}
-        {screen==="result" && (
-          <div style={{animation:"fadeIn 0.4s ease",textAlign:"center",paddingTop:20}}>
-            <div style={{fontSize:"3.5rem",marginBottom:10}}>{score.ok/total>=0.8?"🏆":score.ok/total>=0.5?"👍":"📚"}</div>
-            <h2 style={{fontSize:"1.3rem",fontWeight:900,marginBottom:5,color:unitColor}}>{unit.label} 完了！</h2>
-            {mode==="quiz" ? (
-              <div>
-                <p style={{fontSize:"1.9rem",fontWeight:900,marginBottom:4}}>{score.ok}<span style={{fontSize:"0.95rem",color:"#778"}}> / {total} 問正解</span></p>
-                <p style={{color:"#aab",fontSize:"0.85rem",marginBottom:22}}>正解率 {Math.round((score.ok/total)*100)}%　{score.ok/total>=0.8?"すばらしい！🎉":score.ok/total>=0.5?"なかなか👍":"もう一度復習しよう📖"}</p>
-              </div>
-            ) : (
-              <div>
-                <p style={{fontSize:"1.4rem",fontWeight:700,marginBottom:4}}>✅ {score.ok}語 / ❌ {score.ng}語</p>
-                <p style={{color:"#aab",fontSize:"0.85rem",marginBottom:22}}>全{total}語句を確認しました！</p>
-              </div>
-            )}
-            <div style={{display:"flex",gap:9,justifyContent:"center",flexWrap:"wrap"}}>
-              <button className="fb" onClick={()=>startStudy(unit,mode)} style={{padding:"11px 18px",borderRadius:11,background:`linear-gradient(135deg,${unitColor},${unitColor}99)`,border:"none",color:"#fff",fontWeight:700,fontSize:"0.88rem"}}>もう一度</button>
-              <button className="fb" onClick={()=>startStudy(unit,mode==="flashcard"?"quiz":"flashcard")} style={{padding:"11px 18px",borderRadius:11,background:"rgba(100,120,255,.18)",border:"1px solid rgba(100,120,255,.35)",color:"#aab",fontWeight:700,fontSize:"0.88rem"}}>{mode==="flashcard"?"🧠 クイズに挑戦":"📖 カードで復習"}</button>
-              <button className="fb" onClick={()=>setScreen("home")} style={{padding:"11px 18px",borderRadius:11,background:"rgba(50,50,70,.5)",border:"1px solid #334",color:"#778",fontWeight:700,fontSize:"0.88rem"}}>← 単元選択</button>
-            </div>
+        {screen==="result"&&<div style={{animation:"fadeIn 0.4s ease",textAlign:"center",paddingTop:20}}>
+          <div style={{fontSize:"3.5rem",marginBottom:10}}>{score.ok/total>=0.8?"🏆":score.ok/total>=0.5?"👍":"📚"}</div>
+          <h2 style={{fontSize:"1.3rem",fontWeight:900,marginBottom:5,color:uc}}>{unit.label} 完了！</h2>
+          {mode==="flash"
+            ? <p style={{fontSize:"1.4rem",fontWeight:700,marginBottom:22}}>✅ {score.ok}語 / ❌ {score.ng}語</p>
+            : <div><p style={{fontSize:"1.9rem",fontWeight:900,marginBottom:4}}>{score.ok}<span style={{fontSize:"0.95rem",color:"#778"}}> / {total} 問正解</span></p><p style={{color:"#aab",fontSize:"0.85rem",marginBottom:22}}>正解率 {Math.round(score.ok/total*100)}%</p></div>
+          }
+          <div style={{display:"flex",gap:9,justifyContent:"center",flexWrap:"wrap"}}>
+            <button className="fb" onClick={()=>start(unit,mode)} style={{padding:"11px 18px",borderRadius:11,background:`linear-gradient(135deg,${uc},${uc}99)`,border:"none",color:"#fff",fontWeight:700,fontSize:"0.88rem"}}>もう一度</button>
+            <button className="fb" onClick={()=>setScreen("units")} style={{padding:"11px 18px",borderRadius:11,background:"rgba(50,50,70,.5)",border:"1px solid #334",color:"#778",fontWeight:700,fontSize:"0.88rem"}}>← 単元選択</button>
           </div>
-        )}
+        </div>}
+
       </div>
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
